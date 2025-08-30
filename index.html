@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversor BTC ↔ USD</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>💱 Conversor Bitcoin ↔ Dólar</h1>
+  </header>
+
+  <main>
+    <section class="formulario">
+      <h2>Convertir</h2>
+      <form id="form-conversor">
+        <label for="tipo">Tipo de conversión:</label>
+        <select id="tipo" required>
+          <option value="btc-usd">BTC → USD</option>
+          <option value="usd-btc">USD → BTC</option>
+        </select>
+
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" id="cantidad" min="0.00000001" step="any" required />
+
+        <button type="submit">Convertir</button>
+      </form>
+
+      <p id="resultado"></p>
+    </section>
+
+    <section class="historial">
+      <h2>Historial de conversiones</h2>
+      <ul id="lista-historial"></ul>
+      <button id="btn-limpiar">🗑️ Limpiar historial</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>Simulador</p>
+  </footer>
+
+  <script src="./js/app.js" defer></script>
+</body>
+</html>
