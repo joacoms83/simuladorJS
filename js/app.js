@@ -1,10 +1,12 @@
 'use strict';
 
-const VALOR_BTC_USD = 60000;
+// ---------------- VARIABLES ----------------
+let VALOR_BTC_USD = 0; 
+let historial = recuperarHistorial();
 
-// ---------------- OBJETO DE CONVERSIÓN ----------------
+// ---------------- MODELO ----------------
 function Conversion(tipo, entrada, salida) {
-  this.tipo = tipo;      // "BTC→USD" o "USD→BTC"
+  this.tipo = tipo;      
   this.entrada = entrada;
   this.salida = salida;
   this.fecha = new Date().toLocaleString();
@@ -19,9 +21,6 @@ function recuperarHistorial() {
   const data = localStorage.getItem("historial");
   return data ? JSON.parse(data) : [];
 }
-
-// ---------------- VARIABLES ----------------
-let historial = recuperarHistorial();
 
 // ---------------- FUNCIONES DE CONVERSIÓN ----------------
 function convertirBTCaUSD(btc) {
@@ -76,16 +75,46 @@ document.getElementById("form-conversor").addEventListener("submit", e => {
   mostrarHistorial();
 
   e.target.reset(); 
+  document.getElementById("cantidad").value = 1; 
 });
 
 document.getElementById("btn-limpiar").addEventListener("click", () => {
-  if (confirm("¿Seguro que querés eliminar el historial?")) {
-    historial = [];
-    guardarHistorial();
-    mostrarHistorial();
-    mostrarResultado("📭 Historial eliminado.");
-  }
+  Swal.fire({
+    title: "¿Seguro?",
+    text: "Esto eliminará todo el historial.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  }).then(result => {
+    if (result.isConfirmed) {
+      historial = [];
+      guardarHistorial();
+      mostrarHistorial();
+      mostrarResultado("📭 Historial eliminado.");
+    }
+  });
 });
 
+// ---------------- FETCH DEL VALOR BTC ----------------
+async function cargarValorBTC() {
+  try {
+    const resp = await fetch("./data.json");
+    if (!resp.ok) throw new Error("Error al cargar JSON");
+    const data = await resp.json();
+    VALOR_BTC_USD = data.btc_usd;
+    console.log("Valor BTC cargado:", VALOR_BTC_USD);
+  } catch (error) {
+    VALOR_BTC_USD = 60000; 
+    console.error("No se pudo cargar JSON, usando valor por defecto.");
+  }
+}
+
 // ---------------- INICIALIZACIÓN ----------------
-mostrarHistorial();
+async function init() {
+  await cargarValorBTC();        
+  mostrarHistorial();            
+  document.getElementById("cantidad").value = 1; 
+}
+
+init();
