@@ -1,12 +1,11 @@
 'use strict';
 
-// ---------------- VARIABLES ----------------
-let VALOR_BTC_USD = 0; 
+let tasas = {}; 
 let historial = recuperarHistorial();
 
 // ---------------- MODELO ----------------
 function Conversion(tipo, entrada, salida) {
-  this.tipo = tipo;      
+  this.tipo = tipo;
   this.entrada = entrada;
   this.salida = salida;
   this.fecha = new Date().toLocaleString();
@@ -23,12 +22,16 @@ function recuperarHistorial() {
 }
 
 // ---------------- FUNCIONES DE CONVERSIÓN ----------------
-function convertirBTCaUSD(btc) {
-  return btc * VALOR_BTC_USD;
-}
-
-function convertirUSDaBTC(usd) {
-  return usd / VALOR_BTC_USD;
+function convertir(tipo, cantidad) {
+  switch (tipo) {
+    case "btc-usd": return cantidad * tasas.btc_usd;
+    case "usd-btc": return cantidad / tasas.btc_usd;
+    case "usd-eur": return cantidad * tasas.usd_eur;
+    case "eur-usd": return cantidad * tasas.eur_usd;
+    case "usd-ars": return cantidad * tasas.usd_ars;
+    case "ars-usd": return cantidad * tasas.ars_usd;
+    default: return 0;
+  }
 }
 
 // ---------------- FUNCIONES DEL DOM ----------------
@@ -59,23 +62,38 @@ document.getElementById("form-conversor").addEventListener("submit", e => {
     return;
   }
 
-  let salida, conversion;
-  if (tipo === "btc-usd") {
-    salida = convertirBTCaUSD(cantidad);
-    conversion = new Conversion("BTC→USD", cantidad, salida);
-    mostrarResultado(`${cantidad} BTC = $${salida.toFixed(2)} USD`);
-  } else {
-    salida = convertirUSDaBTC(cantidad);
-    conversion = new Conversion("USD→BTC", cantidad, salida);
-    mostrarResultado(`$${cantidad} USD = ${salida.toFixed(8)} BTC`);
+  const salida = convertir(tipo, cantidad);
+  const conversion = new Conversion(tipo.toUpperCase(), cantidad, salida);
+
+  let texto = "";
+  switch (tipo) {
+    case "btc-usd":
+      texto = `${cantidad} BTC = $${salida.toFixed(2)} USD`;
+      break;
+    case "usd-btc":
+      texto = `$${cantidad} USD = ${salida.toFixed(8)} BTC`;
+      break;
+    case "usd-eur":
+      texto = `$${cantidad} USD = €${salida.toFixed(2)} EUR`;
+      break;
+    case "eur-usd":
+      texto = `€${cantidad} EUR = $${salida.toFixed(2)} USD`;
+      break;
+    case "usd-ars":
+      texto = `$${cantidad} USD = $${salida.toFixed(2)} ARS`;
+      break;
+    case "ars-usd":
+      texto = `$${cantidad} ARS = $${salida.toFixed(2)} USD`;
+      break;
   }
 
+  mostrarResultado(texto);
   historial.push(conversion);
   guardarHistorial();
   mostrarHistorial();
 
-  e.target.reset(); 
-  document.getElementById("cantidad").value = 1; 
+  e.target.reset();
+  document.getElementById("cantidad").value = 1;
 });
 
 document.getElementById("btn-limpiar").addEventListener("click", () => {
@@ -96,25 +114,23 @@ document.getElementById("btn-limpiar").addEventListener("click", () => {
   });
 });
 
-// ---------------- FETCH DEL VALOR BTC ----------------
-async function cargarValorBTC() {
+// ---------------- FETCH DEL JSON ----------------
+async function cargarTasas() {
   try {
     const resp = await fetch("./data.json");
     if (!resp.ok) throw new Error("Error al cargar JSON");
-    const data = await resp.json();
-    VALOR_BTC_USD = data.btc_usd;
-    console.log("Valor BTC cargado:", VALOR_BTC_USD);
+    tasas = await resp.json();
+    console.log("Tasas cargadas:", tasas);
   } catch (error) {
-    VALOR_BTC_USD = 60000; 
-    console.error("No se pudo cargar JSON, usando valor por defecto.");
+    console.error("No se pudo cargar JSON, revisa el archivo.", error);
   }
 }
 
 // ---------------- INICIALIZACIÓN ----------------
 async function init() {
-  await cargarValorBTC();        
-  mostrarHistorial();            
-  document.getElementById("cantidad").value = 1; 
+  await cargarTasas();
+  mostrarHistorial();
+  document.getElementById("cantidad").value = 1;
 }
 
 init();
